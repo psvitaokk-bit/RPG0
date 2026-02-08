@@ -20,6 +20,7 @@ namespace MyRPGMod
         public int upgradeCost = 1;
         public RPGCategory rpgCategory = RPGCategory.Offense;
         public List<AbilityStatEntry> stats = new List<AbilityStatEntry>();
+        public float magicPowerFactor = 0f; // デフォルトは0（影響なし）にしておくと安全だよ
 
         // ★追加：詠唱開始音と発動音★
         public SoundDef soundImpact; // 命中・効果発生時の音
@@ -38,7 +39,7 @@ namespace MyRPGMod
     {
         public RPGAbility(Pawn pawn) : base(pawn) { }
         public RPGAbility(Pawn pawn, AbilityDef def) : base(pawn, def) { }
-
+       
 
 
         public override bool Activate(LocalTargetInfo target, LocalTargetInfo dest)
@@ -47,6 +48,7 @@ namespace MyRPGMod
             if (result)
             {
                 RPGAbilityDef rpgDef = def as RPGAbilityDef;
+
 
                 // ★追加：発動成功（インパクト）の音を鳴らす★
                 if (rpgDef?.soundImpact != null)

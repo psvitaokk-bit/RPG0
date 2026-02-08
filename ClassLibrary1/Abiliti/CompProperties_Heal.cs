@@ -14,7 +14,7 @@ namespace MyRPGMod
         }
     }
 
-    // 実行用クラス
+    // --- 実行用クラス (Heal) ---
     public class CompAbilityEffect_Heal : CompAbilityEffect
     {
         public override void Apply(LocalTargetInfo target, LocalTargetInfo dest)
@@ -27,49 +27,57 @@ namespace MyRPGMod
             if (targetPawn != null && caster != null)
             {
                 CompRPG rpgComp = caster.GetComp<CompRPG>();
-                int currentLevel = rpgComp?.GetAbilityLevel(parent.def) ?? 1;
-
-                // ★追加：魔力強度を取得★
-                float magicMultiplier = rpgComp?.MagicPower ?? 1.0f;
-                if (currentLevel < 1) currentLevel = 1;
-
-                // XMLの <stats> から "Heal Amount" を探す
-                float baseHealAmount = 5f;
                 RPGAbilityDef rpgDef = parent.def as RPGAbilityDef;
-                if (rpgDef?.stats != null)
+
+                if (rpgComp != null && rpgDef != null)
                 {
+                    // 1. レベルによる基本値を計算
+                    int currentLevel = rpgComp.GetAbilityLevel(rpgDef);
+                    float baseHeal = 10f;
+
                     var stat = rpgDef.stats.FirstOrDefault(s => s.label == "Heal Amount");
                     if (stat != null)
                     {
-                        baseHealAmount = stat.baseValue + (stat.valuePerLevel * (currentLevel - 1));
+                        baseHeal = stat.baseValue + (stat.valuePerLevel * Mathf.Max(0, currentLevel - 1));
                     }
+
+                    // 2. 魔力倍率を考慮した最終回復量を計算
+                    float multiplier = rpgComp.GetMagicMultiplier(rpgDef);
+                    float finalHeal = baseHeal * multiplier;
+
+                    // 3. ★実際の回復処理を実行★
+                    HealInjuries(targetPawn, finalHeal);
+
+                    // 画面上に回復量を表示
+                    MoteMaker.ThrowText(targetPawn.DrawPos, targetPawn.Map, $"HEAL! (+{finalHeal:F1})", Color.green, 2f);
                 }
-
-                // ★最終計算：基本量 × 魔力強度★
-                // 例：基本10 × 魔力1.5 = 15回復！
-                float finalHealAmount = baseHealAmount * magicMultiplier;
-
-                // 実際の回復処理（finalHealAmount を使う）
-                float remainingHeal = finalHealAmount;
-                // ... (中略) ...
-                // 自然治癒可能な怪我のリストを取得
-                var injuries = targetPawn.health.hediffSet.hediffs
-                    .OfType<Hediff_Injury>()
-                    .Where(i => i.CanHealNaturally())
-                    .ToList();
-
-                foreach (var injury in injuries)
-                {
-                    if (remainingHeal <= 0) break;
-
-                    float healPower = Mathf.Min(injury.Severity, remainingHeal);
-                    injury.Severity -= healPower;
-                    remainingHeal -= healPower;
-                }
-
-                // 画面上に回復量を表示
-                MoteMaker.ThrowText(targetPawn.DrawPos, targetPawn.Map, $"HEAL! (+{finalHealAmount:F1})", Color.green, 2f);
             }
+        }
+
+        // 傷を治すための補助メソッド
+        private void HealInjuries(Pawn pawn, float amount)
+        {
+            float remainingHeal = amount;
+
+            // ポーンが持っている「怪我(Hediff_Injury)」をリストアップ
+            // 古傷(Scars)は除外し、現在進行形で痛んでいる怪我だけを対象にするのが一般的だよ
+            var injuries = pawn.health.hediffSet.hediffs
+                .OfType<Hediff_Injury>()
+                .Where(i => i.CanHealNaturally() && i.Severity > 0)
+                .ToList();
+
+            foreach (var injury in injuries)
+            {
+                if (remainingHeal <= 0) break;
+
+                // 回復させる量（怪我の重症度か、残り回復ポイントの小さい方）
+                float healPower = Mathf.Min(injury.Severity, remainingHeal);
+
+                // 重症度を下げる（0になると自動的に消滅するよ）
+                injury.Severity -= healPower;
+                remainingHeal -= healPower;
+            }
+
         }
     }
 }

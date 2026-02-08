@@ -23,6 +23,7 @@ namespace MyRPGMod
             if (def == null) return 0;
             return abilityLevels.ContainsKey(def.defName) ? abilityLevels[def.defName] : 0;
         }
+        // CompRPG.cs の MaxMP とかがあるあたりに追加してね
         public float MagicPower
         {
             get
@@ -30,23 +31,25 @@ namespace MyRPGMod
                 Pawn pawn = parent as Pawn;
                 if (pawn == null) return 1f;
 
-                // 1. 精神感応性 (Psychic Sensitivity)
-                // 感応性が高いほど魔法が強くなる
+                // 1. 精神感応性
                 float sensitivity = pawn.GetStatValue(StatDefOf.PsychicSensitivity);
-
-                // 2. 意識 (Consciousness)
-                // 健康状態。意識がないと魔法は使えない
+                // 2. 意識
                 float consciousness = pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness);
-
-                // 3. 知力 (Intellectual)
-                // Lv0で1.0倍、Lv10で1.5倍、Lv20で2.0倍とする (1レベルにつき+5%)
+                // 3. 知力 (1レベルにつき+5%ボーナス)
                 float intellectLevel = pawn.skills.GetSkill(SkillDefOf.Intellectual).Level;
                 float intellectBonus = 1.0f + (intellectLevel * 0.05f);
 
-                // 全てを掛け合わせる
-                // 例：感応性1.0 * 意識1.0 * 知力10(1.5) = 1.5倍
                 return sensitivity * consciousness * intellectBonus;
             }
+        }
+        public float GetMagicMultiplier(RPGAbilityDef def)
+        {
+            // 基本の魔力強度（1.5 とか 0.8 とか）
+            float power = this.MagicPower;
+
+            // 倍率の計算式： 1.0 + (魔力強度 - 1.0) * 影響度
+            // これなら影響度が 0 の時は、計算結果が必ず 1.0（等倍）になるよ！
+            return 1.0f + (power - 1.0f) * def.magicPowerFactor;
         }
         public void UpgradeAbility(RPGAbilityDef def)
         {

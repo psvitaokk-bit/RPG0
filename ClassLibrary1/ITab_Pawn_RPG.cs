@@ -165,14 +165,28 @@ namespace MyRPGMod
             listing.Gap();
 
             int curLv = comp.GetAbilityLevel(def);
+
+            // ★ここを追加：アビリティごとの最終倍率を取得
+            float multiplier = comp.GetMagicMultiplier(def);
+
             if (def.stats != null)
             {
                 foreach (var stat in def.stats)
                 {
-                    float cur = stat.baseValue + (stat.valuePerLevel * Mathf.Max(0, curLv - 1));
-                    float next = stat.baseValue + (stat.valuePerLevel * curLv);
-                    string text = $"{stat.label}: {cur}{stat.unit}";
-                    if (curLv < def.maxLevel) text += $" -> <color=green>{next}{stat.unit}</color>";
+                    // 1. レベルによる基本数値を計算
+                    float baseCur = stat.baseValue + (stat.valuePerLevel * Mathf.Max(0, curLv - 1));
+                    float baseNext = stat.baseValue + (stat.valuePerLevel * curLv);
+
+                    // 2. ★魔力倍率を掛けて最終的な数値を出す
+                    float finalCur = baseCur * multiplier;
+                    float finalNext = baseNext * multiplier;
+
+                    // 3. 表示（倍率が入ると小数が出るので :F1 で小数点第1位まで出すのがきれいだよ）
+                    string text = $"{stat.label}: {finalCur:F1}{stat.unit}";
+                    if (curLv < def.maxLevel)
+                    {
+                        text += $" -> <color=green>{finalNext:F1}{stat.unit}</color>";
+                    }
                     listing.Label(text);
                 }
             }

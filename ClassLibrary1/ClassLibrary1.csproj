@@ -67,7 +67,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class2.cs" />
+    <Compile Include="Abiliti\CompProperties_CustomStun.cs" />
+    <Compile Include="Abiliti\CompProperties_Heal.cs" />
     <Compile Include="ManaHandler.cs" />
     <Compile Include="CompRPG.cs" />
     <Compile Include="Startup_InjectRPG.cs" />

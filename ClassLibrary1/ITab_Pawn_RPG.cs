@@ -45,6 +45,24 @@ namespace MyRPGMod
 
             leftList.Gap(5f);
 
+            // ★追加：魔力強度の表示★
+            // 150% みたいにパーセント表示するとわかりやすいよ
+            float power = rpgComp.MagicPower;
+
+            // 色を変えて強調してみる（100%超えなら緑、未満なら黄色）
+            Color powerColor = power >= 1.0f ? Color.green : Color.yellow;
+            GUI.color = powerColor;
+            leftList.Label($"Magic Power: {power * 100f:F0}%");
+            GUI.color = Color.white;
+
+            // 内訳をツールチップで出すと親切かも（任意）
+            if (Mouse.IsOver(leftList.GetRect(0f))) // 直前のLabelの領域を取得するのは難しいので簡易的に
+            {
+                TooltipHandler.TipRegion(leftList.GetRect(0f), "Based on Psychic Sensitivity, Consciousness, and Intellectual.");
+            }
+
+            leftList.Gap(5f);
+
             // 2. MPバー
             leftList.Label($"MP: {rpgComp.currentMP:F0} / {rpgComp.MaxMP:F0}");
             Rect mpBar = leftList.GetRect(18f);

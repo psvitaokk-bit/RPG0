@@ -1,6 +1,7 @@
 ﻿using RimWorld;
 using Verse;
 using System.Collections.Generic;
+using Verse.Sound;
 
 namespace MyRPGMod
 {
@@ -17,9 +18,11 @@ namespace MyRPGMod
         public float manaCost = 10f;
         public int maxLevel = 1;
         public int upgradeCost = 1;
-        public RPGCategory rpgCategory = RPGCategory.Offense; // 名前を変更
-
+        public RPGCategory rpgCategory = RPGCategory.Offense;
         public List<AbilityStatEntry> stats = new List<AbilityStatEntry>();
+
+        // ★追加：詠唱開始音と発動音★
+        public SoundDef soundImpact; // 命中・効果発生時の音
     }
 
     public class AbilityStatEntry
@@ -36,6 +39,28 @@ namespace MyRPGMod
         public RPGAbility(Pawn pawn) : base(pawn) { }
         public RPGAbility(Pawn pawn, AbilityDef def) : base(pawn, def) { }
 
+
+
+        public override bool Activate(LocalTargetInfo target, LocalTargetInfo dest)
+        {
+            bool result = base.Activate(target, dest);
+            if (result)
+            {
+                RPGAbilityDef rpgDef = def as RPGAbilityDef;
+
+                // ★追加：発動成功（インパクト）の音を鳴らす★
+                if (rpgDef?.soundImpact != null)
+                {
+                    // ターゲットの位置（または弾着地点）で鳴らす
+                    rpgDef.soundImpact.PlayOneShot(new TargetInfo(target.Cell, pawn.Map));
+                }
+
+                CompRPG comp = pawn.GetComp<CompRPG>();
+                if (comp != null && rpgDef != null) comp.TryConsumeMP(rpgDef.manaCost);
+            }
+            return result;
+        }
+
         public override bool GizmoDisabled(out string reason)
         {
             if (base.GizmoDisabled(out reason)) return true;
@@ -49,18 +74,6 @@ namespace MyRPGMod
                 return true;
             }
             return false;
-        }
-
-        public override bool Activate(LocalTargetInfo target, LocalTargetInfo dest)
-        {
-            bool result = base.Activate(target, dest);
-            if (result)
-            {
-                CompRPG comp = pawn.GetComp<CompRPG>();
-                RPGAbilityDef myDef = def as RPGAbilityDef;
-                if (comp != null && myDef != null) comp.TryConsumeMP(myDef.manaCost);
-            }
-            return result;
         }
     }
 }

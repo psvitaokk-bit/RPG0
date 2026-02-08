@@ -23,7 +23,31 @@ namespace MyRPGMod
             if (def == null) return 0;
             return abilityLevels.ContainsKey(def.defName) ? abilityLevels[def.defName] : 0;
         }
+        public float MagicPower
+        {
+            get
+            {
+                Pawn pawn = parent as Pawn;
+                if (pawn == null) return 1f;
 
+                // 1. 精神感応性 (Psychic Sensitivity)
+                // 感応性が高いほど魔法が強くなる
+                float sensitivity = pawn.GetStatValue(StatDefOf.PsychicSensitivity);
+
+                // 2. 意識 (Consciousness)
+                // 健康状態。意識がないと魔法は使えない
+                float consciousness = pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness);
+
+                // 3. 知力 (Intellectual)
+                // Lv0で1.0倍、Lv10で1.5倍、Lv20で2.0倍とする (1レベルにつき+5%)
+                float intellectLevel = pawn.skills.GetSkill(SkillDefOf.Intellectual).Level;
+                float intellectBonus = 1.0f + (intellectLevel * 0.05f);
+
+                // 全てを掛け合わせる
+                // 例：感応性1.0 * 意識1.0 * 知力10(1.5) = 1.5倍
+                return sensitivity * consciousness * intellectBonus;
+            }
+        }
         public void UpgradeAbility(RPGAbilityDef def)
         {
             if (abilityLevels == null) abilityLevels = new Dictionary<string, int>();

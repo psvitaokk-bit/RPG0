@@ -35,7 +35,7 @@ namespace MyRPGMod
             RPGCalculationUtil.GetBoostStats(caster, abilityLevel, out int duration, out float boostAmount);
 
             // 2. バフを適用
-            HediffDef hediffDef = HediffDef.Named("RPG_ConsciousnessBuff");
+            HediffDef hediffDef = RPGDefOf.RPG_ConsciousnessBuff;
 
             // 既にバフがあるなら、一旦消して付け直す（数値更新のため）
             Hediff existing = targetPawn.health.hediffSet.GetFirstHediffOfDef(hediffDef);

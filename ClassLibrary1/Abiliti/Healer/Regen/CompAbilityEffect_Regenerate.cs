@@ -25,7 +25,7 @@ namespace MyRPGMod
             RPGCalculationUtil.GetRegenStats(caster, abilityLevel, out int duration, out float finalHeal);
 
             // --- Hediffの適用 ---
-            HediffDef hediffDef = HediffDef.Named("RPG_RegenerateBuff");
+            HediffDef hediffDef = RPGDefOf.RPG_RegenerateBuff;
 
             // 既にバフがある場合は、一度消して付け直す（数値を更新するため）
             Hediff existing = targetPawn.health.hediffSet.GetFirstHediffOfDef(hediffDef);

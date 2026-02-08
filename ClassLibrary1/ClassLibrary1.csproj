@@ -67,9 +67,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Abiliti\Healer\Hast\Class1.cs" />
-    <Compile Include="Abiliti\Healer\Hast\Class2.cs" />
-    <Compile Include="Abiliti\Healer\Hast\Class3.cs" />
+    <Compile Include="Abiliti\Healer\Hast\Hediff_MagicBoost.cs" />
+    <Compile Include="Abiliti\Healer\Hast\CompProperties_Boost.cs" />
+    <Compile Include="Abiliti\Healer\Hast\RPGAbilityStatWorker_BoostInfo.cs" />
     <Compile Include="Abiliti\Healer\Regen\RPGAbilityStatWorker_RegenInfo.cs" />
     <Compile Include="Abiliti\StateWorker.cs" />
     <Compile Include="Abiliti\CompProperties_MeleeDamage.cs" />
@@ -80,16 +80,17 @@
     <Compile Include="Abiliti\Healer\Regen\CompProperties_Cure.cs" />
     <Compile Include="Abiliti\Healer\Regen\HediffCompProperties_Regenerate.cs" />
     <Compile Include="Abiliti\Healer\Regen\CompAbilityEffect_Regenerate.cs" />
+    <Compile Include="Class1.cs" />
+    <Compile Include="Harmony\Patch_TendUtility_DoTend.cs" />
     <Compile Include="RPGCalculationUtil.cs" />
     <Compile Include="RPGAbilityStatWorker.cs" />
     <Compile Include="RPGAbilityStatWorker_Standard.cs" />
-    <Compile Include="ManaHandler.cs" />
     <Compile Include="CompRPG.cs" />
     <Compile Include="Startup_InjectRPG.cs" />
     <Compile Include="ITab_Pawn_RPG.cs" />
     <Compile Include="RPGAbilityDef.cs" />
     <Compile Include="Gizmo_ManaBa.cs" />
-    <Compile Include="HarmonyPatches.cs" />
+    <Compile Include="Harmony\Patch_Pawn_Kill.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

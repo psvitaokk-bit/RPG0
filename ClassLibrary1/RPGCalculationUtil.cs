@@ -46,11 +46,26 @@ namespace MyRPGMod
         // =============================================================
 
         // 病気ランクの判定
+        private static readonly HashSet<string> Tier4Diseases = new HashSet<string>
+        {
+            "FibrousMechanites", "SensoryMechanites", "ScariaInfection"
+        };
+
+        private static readonly HashSet<string> Tier3Diseases = new HashSet<string>
+        {
+            "Malaria", "Plague", "Animal_Plague", "SleepingSickness", "LungRot", "LungRotExposure"
+        };
+
+        private static readonly HashSet<string> Tier2Diseases = new HashSet<string>
+        {
+            "GutWorms", "MuscleParasites"
+        };
+        private static readonly string[] Tier1List = { "WoundInfection", "Flu", "Animal_Flu", "FoodPoisoning" };
         public static int GetDiseaseTier(string defName)
         {
-            if (new HashSet<string> { "FibrousMechanites", "SensoryMechanites", "ScariaInfection" }.Contains(defName)) return 4;
-            if (new HashSet<string> { "Malaria", "Plague", "Animal_Plague", "SleepingSickness", "LungRot", "LungRotExposure" }.Contains(defName)) return 3;
-            if (new HashSet<string> { "GutWorms", "MuscleParasites" }.Contains(defName)) return 2;
+            if (Tier4Diseases.Contains(defName)) return 4;
+            if (Tier3Diseases.Contains(defName)) return 3;
+            if (Tier2Diseases.Contains(defName)) return 2;
             return 1;
         }
 
@@ -60,12 +75,9 @@ namespace MyRPGMod
             if (caster == null) return 0f;
 
             float medicalLevel = caster.skills?.GetSkill(SkillDefOf.Medicine)?.Level ?? 0f;
-            float magicPower = GetMagicPower(caster); // さっき作ったメソッドを再利用！
+            float magicPower = GetMagicPower(caster);
 
-            // ランクごとの基礎確率
             float baseChance = 0.45f - (diseaseTier * 0.15f);
-
-            // ボーナス加算
             float chance = baseChance + (medicalLevel * 0.03f) + (magicPower * 0.10f);
 
             return Mathf.Clamp01(chance);
@@ -75,10 +87,11 @@ namespace MyRPGMod
         public static HashSet<string> GetCurableDefNames(int level)
         {
             HashSet<string> curables = new HashSet<string>();
-            if (level >= 1) curables.UnionWith(new[] { "WoundInfection", "Flu", "Animal_Flu", "FoodPoisoning" });
-            if (level >= 2) curables.UnionWith(new[] { "GutWorms", "MuscleParasites" });
-            if (level >= 3) curables.UnionWith(new[] { "Malaria", "Plague", "Animal_Plague", "SleepingSickness", "LungRot", "LungRotExposure" });
-            if (level >= 4) curables.UnionWith(new[] { "FibrousMechanites", "SensoryMechanites", "ScariaInfection" });
+            // ここも事前に作ったリストを使い回すようにしたよ！
+            if (level >= 1) curables.UnionWith(Tier1List);
+            if (level >= 2) curables.UnionWith(Tier2Diseases);
+            if (level >= 3) curables.UnionWith(Tier3Diseases);
+            if (level >= 4) curables.UnionWith(Tier4Diseases);
             return curables;
         }
 

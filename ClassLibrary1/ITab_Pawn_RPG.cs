@@ -3,165 +3,183 @@ using Verse;
 using RimWorld;
 using Verse.Sound;
 using System.Collections.Generic;
-using System.Linq; // データを検索・整理するために必要
+using System.Linq;
 
 namespace MyRPGMod
 {
     public class ITab_Pawn_RPG : ITab
     {
-        // スクロール位置を記憶しておく変数
         private Vector2 scrollPosition;
+        private RPGAbilityDef selectedAbility;
 
         public ITab_Pawn_RPG()
         {
-            this.size = new Vector2(300f, 450f); // 少し縦長にしておいたよ
+            this.size = new Vector2(600f, 480f);
             this.labelKey = "RPG Stats";
         }
 
         protected override void FillTab()
         {
             Pawn pawn = SelPawn;
-            if (pawn == null) return;
-
-            CompRPG rpgComp = pawn.GetComp<CompRPG>();
+            CompRPG rpgComp = pawn?.GetComp<CompRPG>();
             if (rpgComp == null) return;
 
-            // --- 描画の準備 ---
-            Rect rect = new Rect(0f, 0f, this.size.x, this.size.y).ContractedBy(10f);
-            Listing_Standard listing = new Listing_Standard();
-            listing.Begin(rect);
+            Rect rect = new Rect(0f, 0f, size.x, size.y).ContractedBy(10f);
 
-            // ==========================================
-            // 1. 基本ステータス（ここは固定表示）
-            // ==========================================
+            // 左右分割
+            Rect leftRect = rect.LeftPart(0.45f);
+            Rect rightRect = rect.RightPart(0.53f);
+
+            // --- 左側：ステータス ＆ リスト ---
+            Listing_Standard leftList = new Listing_Standard();
+            leftList.Begin(leftRect);
+
+            // 1. レベルと経験値
             Text.Font = GameFont.Medium;
-            listing.Label($"Level: {rpgComp.level}");
-
+            leftList.Label($"Level: {rpgComp.level}");
             Text.Font = GameFont.Small;
-            listing.Label($"XP: {rpgComp.currentXp:F0} / {rpgComp.XpToNextLevel:F0}");
+            leftList.Label($"XP: {rpgComp.currentXp:F0} / {rpgComp.XpToNextLevel:F0}");
 
-            // 経験値バー
-            Rect barRect = listing.GetRect(22f);
-            Widgets.FillableBar(barRect, rpgComp.currentXp / rpgComp.XpToNextLevel);
+            Rect xpBar = leftList.GetRect(18f);
+            Widgets.FillableBar(xpBar, rpgComp.currentXp / rpgComp.XpToNextLevel);
 
-            listing.Gap(5f);
-            listing.Label($"Skill Points: {rpgComp.skillPoints}");
-            listing.GapLine();
+            leftList.Gap(5f);
 
-            listing.Gap(5f);
+            // 2. MPバー
+            leftList.Label($"MP: {rpgComp.currentMP:F0} / {rpgComp.MaxMP:F0}");
+            Rect mpBar = leftList.GetRect(18f);
+            Widgets.DrawBoxSolid(mpBar, Color.black);
+            Rect mpFill = mpBar.ContractedBy(1f);
+            mpFill.width *= (rpgComp.currentMP / rpgComp.MaxMP);
+            Widgets.DrawBoxSolid(mpFill, new Color(0.2f, 0.2f, 0.8f));
 
-            listing.Gap(5f);
-            listing.Label($"Skill Points: {rpgComp.skillPoints}");
-            // ==========================================
-            // 2. アビリティ一覧（スクロールエリア）
-            // ==========================================
+            leftList.Gap(5f);
 
-            // ★ポイント: 表示したいアビリティを全検索してリスト化
-            // "RPG_" で始まるdefNameのアビリティを自動で集めるようにしたよ
-            List<AbilityDef> rpgAbilities = DefDatabase<AbilityDef>.AllDefs
-                .Where(def => def.defName.StartsWith("RPG_"))
-                .ToList();
+            // 3. スキルポイント
+            leftList.Label($"Skill Points: {rpgComp.skillPoints}");
+            leftList.GapLine();
 
-            // スクロールの中身の高さを計算（アビリティの数 × 1行の高さ）
-            float lineHeight = 30f;
-            float contentHeight = rpgAbilities.Count * lineHeight + 50f; // 少し余裕を持たせる
-            if (Prefs.DevMode) contentHeight += 200f; // デバッグメニュー用
+            // 4. アビリティリスト（スクロール）
+            Rect scrollRect = leftList.GetRect(leftRect.height - leftList.CurHeight);
+            Rect viewRect = new Rect(0f, 0f, scrollRect.width - 16f, 1000f);
 
-            // スクロール用の「窓」と「中身」の矩形を定義
-            Rect outRect = listing.GetRect(rect.height - listing.CurHeight); // 残りのスペース全部
-            Rect viewRect = new Rect(0f, 0f, outRect.width - 16f, contentHeight); // スクロールバーの幅(16px)を引く
+            Widgets.BeginScrollView(scrollRect, ref scrollPosition, viewRect);
+            Listing_Standard scrollList = new Listing_Standard();
+            scrollList.Begin(viewRect);
 
-            // スクロール開始
-            Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
-
-            Listing_Standard scrollListing = new Listing_Standard();
-            scrollListing.Begin(viewRect);
-
-            scrollListing.Label("Abilities:");
-
-            // 自動取得したリストをループで回してボタンを作る
-            if (rpgComp.unlockedAbilities == null) rpgComp.unlockedAbilities = new List<string>();
-
-            foreach (AbilityDef ability in rpgAbilities)
+            // アビリティ一覧
+            foreach (var def in DefDatabase<AbilityDef>.AllDefs.OfType<RPGAbilityDef>())
             {
-                DrawAbilityRow(scrollListing, rpgComp, ability);
+                Rect r = scrollList.GetRect(30f);
+                if (selectedAbility == def) Widgets.DrawHighlightSelected(r);
+                else Widgets.DrawHighlightIfMouseover(r);
+
+                if (Widgets.ButtonInvisible(r)) { selectedAbility = def; SoundDefOf.Click.PlayOneShotOnCamera(); }
+
+                int curLv = rpgComp.GetAbilityLevel(def);
+                string label = $"{def.label} (Lv.{curLv})";
+                if (curLv == 0) GUI.color = Color.gray;
+                Widgets.Label(r.ContractedBy(2f), label);
+                GUI.color = Color.white;
             }
 
-            // ==========================================
-            // 3. デバッグメニュー（スクロールの一番下）
-            // ==========================================
+            // ★追加：デバッグメニュー★
             if (Prefs.DevMode)
             {
-                scrollListing.GapLine();
+                scrollList.GapLine();
                 GUI.color = Color.red;
-                scrollListing.Label("--- DEBUG MENU ---");
+                scrollList.Label("--- DEBUG MENU ---");
                 GUI.color = Color.white;
 
-                if (scrollListing.ButtonText("Add 1000 XP"))
+                if (scrollList.ButtonText("Add 1000 XP"))
                 {
                     rpgComp.GainXp(1000f);
                     SoundDefOf.Click.PlayOneShotOnCamera();
                 }
-                if (scrollListing.ButtonText("Force Level Up"))
+                if (scrollList.ButtonText("Force Level Up"))
                 {
                     float needed = rpgComp.XpToNextLevel - rpgComp.currentXp;
                     rpgComp.GainXp(needed);
                     SoundDefOf.Click.PlayOneShotOnCamera();
                 }
-                if (scrollListing.ButtonText("Add 10 Skill Points"))
+                if (scrollList.ButtonText("Add 10 Skill Points"))
                 {
                     rpgComp.skillPoints += 10;
                     SoundDefOf.Click.PlayOneShotOnCamera();
                 }
             }
 
-            scrollListing.End();
+            scrollList.End();
             Widgets.EndScrollView();
-            // スクロール終了
+            leftList.End();
 
-            listing.End();
-        }
-
-        // 行ごとの描画処理を別関数に分けたよ（コードがスッキリする！）
-        private void DrawAbilityRow(Listing_Standard listing, CompRPG comp, AbilityDef ability)
-        {
-            // コスト設定（とりあえず全部一律2ポイントにしてるけど、XMLに拡張データ持たせてもいいね）
-            int cost = 2;
-
-            // 横並びレイアウト用の枠を確保
-            Rect rowRect = listing.GetRect(30f);
-
-            // 左側：アビリティ名
-            Rect labelRect = new Rect(rowRect.x, rowRect.y, rowRect.width * 0.6f, rowRect.height);
-            // 右側：ボタン
-            Rect buttonRect = new Rect(rowRect.x + rowRect.width * 0.6f, rowRect.y, rowRect.width * 0.4f, rowRect.height);
-
-            Widgets.Label(labelRect, ability.label);
-
-            if (comp.unlockedAbilities.Contains(ability.defName))
+            // --- 右側：詳細表示 ---
+            Widgets.DrawLineVertical(leftRect.xMax + 5f, rect.y, rect.height);
+            if (selectedAbility != null)
             {
-                // 習得済み
-                GUI.color = Color.green;
-                Widgets.Label(buttonRect, "Learned");
-                GUI.color = Color.white;
+                DrawDetail(rightRect, rpgComp, selectedAbility);
             }
             else
             {
-                // 未習得
-                if (Widgets.ButtonText(buttonRect, $"Unlock ({cost} pt)"))
+                Text.Anchor = TextAnchor.MiddleCenter;
+                GUI.color = Color.gray;
+                Widgets.Label(rightRect, "Select an ability");
+                GUI.color = Color.white;
+                Text.Anchor = TextAnchor.UpperLeft;
+            }
+        }
+
+        private void DrawDetail(Rect rect, CompRPG comp, RPGAbilityDef def)
+        {
+            Listing_Standard listing = new Listing_Standard();
+            listing.Begin(rect);
+
+            Text.Font = GameFont.Medium;
+            listing.Label(def.label);
+            Text.Font = GameFont.Tiny;
+            GUI.color = Color.cyan;
+            listing.Label($"Type: {def.rpgCategory}");
+            GUI.color = Color.white;
+            listing.GapLine();
+
+            Text.Font = GameFont.Small;
+            listing.Label(def.description);
+            listing.Gap();
+
+            int curLv = comp.GetAbilityLevel(def);
+            if (def.stats != null)
+            {
+                foreach (var stat in def.stats)
                 {
-                    if (comp.skillPoints >= cost)
-                    {
-                        comp.skillPoints -= cost;
-                        comp.UnlockAbility(ability);
-                        SoundDefOf.TechprintApplied.PlayOneShotOnCamera();
-                    }
-                    else
-                    {
-                        Messages.Message("Not enough skill points!", MessageTypeDefOf.RejectInput, false);
-                    }
+                    float cur = stat.baseValue + (stat.valuePerLevel * Mathf.Max(0, curLv - 1));
+                    float next = stat.baseValue + (stat.valuePerLevel * curLv);
+                    string text = $"{stat.label}: {cur}{stat.unit}";
+                    if (curLv < def.maxLevel) text += $" -> <color=green>{next}{stat.unit}</color>";
+                    listing.Label(text);
                 }
             }
+
+            listing.Gap();
+            listing.Label($"Mana Cost: {def.manaCost}");
+
+            Rect btnRect = new Rect(rect.x, rect.yMax - 40f, rect.width, 35f);
+            if (curLv < def.maxLevel)
+            {
+                string btnLabel = curLv == 0 ? $"Learn ({def.upgradeCost}pt)" : $"Upgrade ({def.upgradeCost}pt)";
+                if (Widgets.ButtonText(btnRect, btnLabel))
+                {
+                    comp.UpgradeAbility(def);
+                    SoundDefOf.TechprintApplied.PlayOneShotOnCamera();
+                }
+            }
+            else
+            {
+                GUI.color = Color.gray;
+                Widgets.Label(btnRect, "MAX LEVEL REACHED");
+                GUI.color = Color.white;
+            }
+
+            listing.End();
         }
     }
 }

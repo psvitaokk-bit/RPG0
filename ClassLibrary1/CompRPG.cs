@@ -24,33 +24,23 @@ namespace MyRPGMod
             return abilityLevels.ContainsKey(def.defName) ? abilityLevels[def.defName] : 0;
         }
         // CompRPG.cs の MaxMP とかがあるあたりに追加してね
+        public float GetMagicMultiplier(RPGAbilityDef def)
+        {
+            Pawn pawn = parent as Pawn;
+            // 自分では計算せず、新しく作った便利屋さんに丸投げする！
+            return RPGCalculationUtil.GetMagicMultiplier(pawn, def);
+        }
+
+        // もし "MagicPower" のエラーも出ていたら、これも足しておいてね
         public float MagicPower
         {
             get
             {
                 Pawn pawn = parent as Pawn;
-                if (pawn == null) return 1f;
-
-                // 1. 精神感応性
-                float sensitivity = pawn.GetStatValue(StatDefOf.PsychicSensitivity);
-                // 2. 意識
-                float consciousness = pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness);
-                // 3. 知力 (1レベルにつき+5%ボーナス)
-                float intellectLevel = pawn.skills.GetSkill(SkillDefOf.Intellectual).Level;
-                float intellectBonus = 1.0f + (intellectLevel * 0.05f);
-
-                return sensitivity * consciousness * intellectBonus;
+                return RPGCalculationUtil.GetMagicPower(pawn);
             }
         }
-        public float GetMagicMultiplier(RPGAbilityDef def)
-        {
-            // 基本の魔力強度（1.5 とか 0.8 とか）
-            float power = this.MagicPower;
 
-            // 倍率の計算式： 1.0 + (魔力強度 - 1.0) * 影響度
-            // これなら影響度が 0 の時は、計算結果が必ず 1.0（等倍）になるよ！
-            return 1.0f + (power - 1.0f) * def.magicPowerFactor;
-        }
         public void UpgradeAbility(RPGAbilityDef def)
         {
             if (abilityLevels == null) abilityLevels = new Dictionary<string, int>();
@@ -90,11 +80,20 @@ namespace MyRPGMod
             return false;
         }
 
-        public override void CompTick()
+        // CompTick は削除して、代わりにこれを使う
+        public override void CompTickRare()
         {
-            if (parent is Pawn p && p.IsHashIntervalTick(60) && currentMP < MaxMP)
+            base.CompTickRare(); // 親クラスの処理も忘れずに
+
+            // 死亡している、またはマップ上にいない（キャラバン中など）場合は処理しない
+            if (parent is Pawn p && !p.Dead && p.Map != null)
             {
-                currentMP = Mathf.Min(currentMP + 1.0f, MaxMP);
+                // MPが減っている時だけ計算
+                if (currentMP < MaxMP)
+                {
+                    // 250Tickごとなので、回復量を調整 (60Tickで+1.0なら、250Tickで約+4.0)
+                    currentMP = Mathf.Min(currentMP + 4.0f, MaxMP);
+                }
             }
         }
         public RPGClassDef currentClass;

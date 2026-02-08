@@ -24,7 +24,7 @@ namespace MyRPGMod
             return val;
         }
     }
-
+    
     // おまけ：魔力の影響を受けない固定値用のWorker
     public class RPGAbilityStatWorker_Fixed : RPGAbilityStatWorker
     {

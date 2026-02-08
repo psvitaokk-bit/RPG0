@@ -99,7 +99,8 @@ namespace MyRPGMod
                 Widgets.FillableBar(xpBar, rpgComp.currentXp / rpgComp.XpToNextLevel);
                 list.Gap(5f);
             Text.Font = GameFont.Small;
-            list.Label($"Magic Power: {rpgComp.MagicPower.ToStringPercent()}");
+            float magicPower = RPGCalculationUtil.GetMagicPower(rpgComp.parent as Pawn);
+            list.Label($"Magic Power: {magicPower.ToStringPercent()}");
             // MPバー
             list.Label($"MP: {rpgComp.currentMP:F0} / {rpgComp.MaxMP:F0}");
                 Rect mpBar = list.GetRect(18f);
@@ -311,10 +312,6 @@ namespace MyRPGMod
                     // 注意：Workerによっては数値計算しない(0を返す)ものもあるので、テキスト系Workerの場合はif文で弾く工夫が必要かも
                     float nextVal = stat.Worker.Calculate(stat.baseValue, stat.valuePerLevel, curLv + 1, caster, def);
 
-                    // 0じゃない、かつテキスト系Workerじゃない場合のみ緑文字を足すなどの判定があるとベターだけど
-                    // 現状は「治せる病気リスト」のWorkerが0を返すから、そこだけ "-> 0%" みたいに出ないように
-                    // Worker側でCalculateが0を返すなら表示しない、といった処理を入れてもいいかもね。
-                    // いったんそのままにするけど、もし変な表示が出たら相談してね！
 
                     // 数値系のステータスだけ予測値を出すための簡易チェック
                     if (stat.label != "Effectiveness" && stat.label != "Success Chance")

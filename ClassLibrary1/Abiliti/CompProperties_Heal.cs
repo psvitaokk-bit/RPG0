@@ -19,7 +19,7 @@ namespace MyRPGMod
     {
         public override void Apply(LocalTargetInfo target, LocalTargetInfo dest)
         {
-            base.Apply(target, dest);
+            base.Apply(target, dest); // baseも呼んでおくと安心
 
             Pawn targetPawn = target.Pawn;
             Pawn caster = parent.pawn;
@@ -31,24 +31,27 @@ namespace MyRPGMod
 
                 if (rpgComp != null && rpgDef != null)
                 {
-                    // 1. レベルによる基本値を計算
                     int currentLevel = rpgComp.GetAbilityLevel(rpgDef);
-                    float baseHeal = 10f;
+                    float finalHeal = 10f; // statが見つからない時のデフォルト値
 
+                    // "Heal Amount" というラベルの定義を探す
                     var stat = rpgDef.stats.FirstOrDefault(s => s.label == "Heal Amount");
+
                     if (stat != null)
                     {
-                        baseHeal = stat.baseValue + (stat.valuePerLevel * Mathf.Max(0, currentLevel - 1));
+                        // ★ここが変わった！
+                        // Workerに「今のレベルと術者のステータスだと、数値いくつ？」って聞くだけ
+                        finalHeal = stat.Worker.Calculate(
+                            stat.baseValue,
+                            stat.valuePerLevel,
+                            currentLevel,
+                            caster,
+                            rpgDef
+                        );
                     }
 
-                    // 2. 魔力倍率を考慮した最終回復量を計算
-                    float multiplier = rpgComp.GetMagicMultiplier(rpgDef);
-                    float finalHeal = baseHeal * multiplier;
-
-                    // 3. ★実際の回復処理を実行★
+                    // あとは結果を使うだけ
                     HealInjuries(targetPawn, finalHeal);
-
-                    // 画面上に回復量を表示
                     MoteMaker.ThrowText(targetPawn.DrawPos, targetPawn.Map, $"HEAL! (+{finalHeal:F1})", Color.green, 2f);
                 }
             }

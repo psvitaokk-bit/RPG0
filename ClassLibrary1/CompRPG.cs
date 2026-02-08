@@ -97,7 +97,7 @@ namespace MyRPGMod
                 currentMP = Mathf.Min(currentMP + 1.0f, MaxMP);
             }
         }
-
+        public RPGClassDef currentClass;
         public override void PostExposeData()
         {
             base.PostExposeData();
@@ -106,6 +106,7 @@ namespace MyRPGMod
             Scribe_Values.Look(ref skillPoints, "skillPoints", 0);
             Scribe_Values.Look(ref currentMP, "currentMP", 0);
             Scribe_Collections.Look(ref abilityLevels, "abilityLevels", LookMode.Value, LookMode.Value);
+            Scribe_Defs.Look(ref currentClass, "currentClass");
         }
 
         public override IEnumerable<Gizmo> CompGetGizmosExtra()

@@ -21,17 +21,40 @@ namespace MyRPGMod
         public RPGCategory rpgCategory = RPGCategory.Offense;
         public List<AbilityStatEntry> stats = new List<AbilityStatEntry>();
         public float magicPowerFactor = 0f; // デフォルトは0（影響なし）にしておくと安全だよ
-
+        // XMLで指定しなければ null になる（＝誰でも使える汎用スキル扱い）
+        public RPGClassDef requiredClass;
         // ★追加：詠唱開始音と発動音★
         public SoundDef soundImpact; // 命中・効果発生時の音
     }
 
+    // RPGAbilityDef.cs の AbilityStatEntry を修正
     public class AbilityStatEntry
     {
         public string label;
         public float baseValue;
         public float valuePerLevel;
         public string unit = "";
+
+        // 表示フォーマット (例: "F1" なら小数第1位まで, "P0" ならパーセント)
+        public string formatString = "F1";
+
+        // ★ここで計算係を指定！デフォルトは標準型にしておく
+        public System.Type workerClass = typeof(RPGAbilityStatWorker_Standard);
+
+        // インスタンスをキャッシュしておく変数
+        private RPGAbilityStatWorker workerInt;
+
+        public RPGAbilityStatWorker Worker
+        {
+            get
+            {
+                if (workerInt == null)
+                {
+                    workerInt = (RPGAbilityStatWorker)System.Activator.CreateInstance(workerClass);
+                }
+                return workerInt;
+            }
+        }
     }
 
     // --- ここから下は前回の RPGAbility ロジック ---

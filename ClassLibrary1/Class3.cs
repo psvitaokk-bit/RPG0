@@ -1,3 +1,0 @@
-﻿using MyRPGMod;
-using Verse;
-

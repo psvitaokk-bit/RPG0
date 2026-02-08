@@ -11,8 +11,41 @@ namespace MyRPGMod
         public float currentXp = 0;
         public int skillPoints = 0;
         public float currentMP = 0;
+        public bool autoHealEnabled = true; // デフォルトはON
         public float MaxMP => level * 20f;
         public float XpToNextLevel => level * 1000f;
+        // クラスを変更する時の処理
+        public void SetClass(RPGClassDef newClass)
+        {
+            Pawn pawn = parent as Pawn;
+            if (pawn == null) return;
+
+            // 1. 古いクラスのパッシブ効果を消す
+            if (this.currentClass != null && this.currentClass.classPassiveHediff != null)
+            {
+                Hediff oldHediff = pawn.health.hediffSet.GetFirstHediffOfDef(this.currentClass.classPassiveHediff);
+                if (oldHediff != null)
+                {
+                    pawn.health.RemoveHediff(oldHediff);
+                }
+            }
+
+            // 2. クラス情報を更新
+            this.currentClass = newClass;
+
+            // 3. 新しいクラスのパッシブ効果を付ける
+            if (this.currentClass != null && this.currentClass.classPassiveHediff != null)
+            {
+                // 既に持っていないか確認してから追加
+                if (pawn.health.hediffSet.GetFirstHediffOfDef(this.currentClass.classPassiveHediff) == null)
+                {
+                    Hediff newHediff = HediffMaker.MakeHediff(this.currentClass.classPassiveHediff, pawn);
+                    // 部位指定なし（全身）で追加
+                    pawn.health.AddHediff(newHediff);
+                }
+            }
+        }
+
 
         // レベル管理用の辞書
         public Dictionary<string, int> abilityLevels = new Dictionary<string, int>();
@@ -52,7 +85,12 @@ namespace MyRPGMod
                 if (curLv == 0)
                 {
                     abilityLevels[def.defName] = 1;
-                    (parent as Pawn)?.abilities.GainAbility(def);
+
+                    // ★修正点：文字列 "Passive" ではなく、列挙型の RPGCategory.Passive を使う
+                    if (def.rpgCategory != RPGCategory.Passive)
+                    {
+                        (parent as Pawn)?.abilities.GainAbility(def);
+                    }
                 }
                 else
                 {
@@ -80,19 +118,32 @@ namespace MyRPGMod
             return false;
         }
 
-        // CompTick は削除して、代わりにこれを使う
+    
         public override void CompTickRare()
         {
-            base.CompTickRare(); // 親クラスの処理も忘れずに
+            base.CompTickRare(); // 親クラスの処理
 
-            // 死亡している、またはマップ上にいない（キャラバン中など）場合は処理しない
-            if (parent is Pawn p && !p.Dead && p.Map != null)
+            Pawn p = parent as Pawn;
+            if (p == null || p.Dead) return;
+
+            // 1. MPの自然回復 (マップにいる時のみ)
+            if (p.Map != null)
             {
-                // MPが減っている時だけ計算
                 if (currentMP < MaxMP)
                 {
-                    // 250Tickごとなので、回復量を調整 (60Tickで+1.0なら、250Tickで約+4.0)
+                    // 250Tick(約4秒)ごとの回復量
                     currentMP = Mathf.Min(currentMP + 4.0f, MaxMP);
+                }
+            }
+
+            // 2. パッシブ効果の維持チェック
+            // ★重要：currentClass が null じゃないか必ずチェックする！
+            if (currentClass != null && currentClass.classPassiveHediff != null)
+            {
+                // まだバフを持っていないなら付与する
+                if (p.health.hediffSet.GetFirstHediffOfDef(currentClass.classPassiveHediff) == null)
+                {
+                    p.health.AddHediff(HediffMaker.MakeHediff(currentClass.classPassiveHediff, p));
                 }
             }
         }
@@ -105,12 +156,31 @@ namespace MyRPGMod
             Scribe_Values.Look(ref skillPoints, "skillPoints", 0);
             Scribe_Values.Look(ref currentMP, "currentMP", 0);
             Scribe_Collections.Look(ref abilityLevels, "abilityLevels", LookMode.Value, LookMode.Value);
+            Scribe_Values.Look(ref autoHealEnabled, "autoHealEnabled", true);
             Scribe_Defs.Look(ref currentClass, "currentClass");
         }
 
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
         {
-            if (parent is Pawn p && p.IsColonistPlayerControlled) yield return new Gizmo_ManaBar(this);
+            if (parent is Pawn p && p.IsColonistPlayerControlled)
+            {
+                yield return new Gizmo_ManaBar(this);
+
+                // ★変更：アビリティを持っている時だけ表示
+                RPGAbilityDef healDef = DefDatabase<RPGAbilityDef>.GetNamedSilentFail("RPG_MedicalTouch");
+
+                if (healDef != null && this.GetAbilityLevel(healDef) > 0)
+                {
+                    yield return new Command_Toggle
+                    {
+                        defaultLabel = "Auto Heal",
+                        defaultDesc = $"ONにすると、手当て時にMPを消費して追加回復を行います。\n(Cost: {healDef.manaCost})",
+                        icon = ContentFinder<Texture2D>.Get("UI/Designators/Tame"),
+                        isActive = () => autoHealEnabled,
+                        toggleAction = () => autoHealEnabled = !autoHealEnabled
+                    };
+                }
+            }
         }
     }
 

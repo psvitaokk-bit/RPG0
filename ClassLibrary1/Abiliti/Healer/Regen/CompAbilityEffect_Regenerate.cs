@@ -16,22 +16,13 @@ namespace MyRPGMod
 
             CompRPG rpgComp = caster.GetComp<CompRPG>();
             RPGAbilityDef rpgDef = parent.def as RPGAbilityDef;
-            if (rpgComp == null) return;
+            if (rpgComp == null) return; // ここまではOK
 
-            // --- 計算式 ---
+            // ★この行を追加してね！
+            // これがないと abilityLevel が何なのか分からなくてエラーになるよ
             int abilityLevel = rpgComp.GetAbilityLevel(rpgDef);
-            float magicPower = rpgComp.MagicPower;
-            float medicalLevel = caster.skills.GetSkill(SkillDefOf.Medicine).Level;
 
-            // 1. 持続時間 (Ticks)
-            // 基本15秒(900) + レベルごとに5秒(300)延長
-            int duration = 900 + (abilityLevel * 300);
-
-            // 2. 秒間回復量
-            // 基本0.2 + (医術Lv * 0.02)
-            // 最後に魔力倍率を掛ける
-            float baseHeal = 0.2f + (medicalLevel * 0.02f);
-            float finalHeal = baseHeal * magicPower;
+            RPGCalculationUtil.GetRegenStats(caster, abilityLevel, out int duration, out float finalHeal);
 
             // --- Hediffの適用 ---
             HediffDef hediffDef = HediffDef.Named("RPG_RegenerateBuff");

@@ -51,29 +51,32 @@ namespace MyRPGMod
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("【現在のレベルで治せる病気】");
 
-            // レベル1から現在のレベルまで、順番に表示していくよ
             for (int i = 1; i <= level; i++)
             {
-                // そのランクに該当する病気の内部名リストを取得
-                HashSet<string> names = GetNamesForTier(i);
+                // ★修正：Utilを使う
+                HashSet<string> names = RPGCalculationUtil.GetCurableDefNames(i);
+
+                // (注意：GetCurableDefNamesは「そのレベル以下全部」を返す仕様なので、
+                // ランクごとの表示にするなら Util に「特定のランクだけ返すメソッド」を作るか、
+                // ここで差分を取るロジックが必要になります。
+                // 簡易的に表示するなら、このままでも動作はします)
+
                 if (names.Count == 0) continue;
 
-                // ランクの見出し（色を付けるとより分かりやすいよ！）
                 sb.AppendLine(GetTierHeader(i));
-
-                // 病気名をラベルに変換して箇条書きにする
                 foreach (string name in names)
                 {
+                    // そのランクのものだけ表示するフィルタリング（簡易実装）
+                    if (RPGCalculationUtil.GetDiseaseTier(name) != i) continue;
+
                     HediffDef def = DefDatabase<HediffDef>.GetNamedSilentFail(name);
                     string label = (def != null) ? (string)def.LabelCap : name;
                     sb.AppendLine($"  ・{label}");
                 }
             }
-
             return sb.ToString().TrimEnd();
         }
 
-        // ランクごとの見出し（お兄ちゃんの好みの名前に変えてね！）
         private string GetTierHeader(int tier)
         {
             switch (tier)
@@ -85,10 +88,11 @@ namespace MyRPGMod
                 default: return "不明なランク";
             }
         }
+    
 
-        // 各ランクにどの病気が含まれるかの定義
-        // ※CompAbilityEffect_Cureのロジックと合わせておくと管理が楽だよ
-        private HashSet<string> GetNamesForTier(int tier)
+    // 各ランクにどの病気が含まれるかの定義
+    // ※CompAbilityEffect_Cureのロジックと合わせておくと管理が楽だよ
+    private HashSet<string> GetNamesForTier(int tier)
         {
             switch (tier)
             {
@@ -109,22 +113,17 @@ namespace MyRPGMod
         {
             if (caster == null) return "Success Chance: ---";
 
-            CompRPG rpgComp = caster.GetComp<CompRPG>();
-            float medicalLevel = caster.skills.GetSkill(SkillDefOf.Medicine).Level;
-            float magicPower = (rpgComp != null) ? rpgComp.MagicPower : 1f;
-
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Success Chance per Tier:");
 
             for (int tier = 1; tier <= 4; tier++)
             {
-                float baseChance = 0.45f - (tier * 0.15f);
-                float chance = Mathf.Clamp01(baseChance + (medicalLevel * 0.03f) + (magicPower * 0.10f));
+                // ★修正：Utilを使って一発計算
+                float chance = RPGCalculationUtil.GetCureSuccessChance(caster, tier);
 
                 string tierName = GetTierName(tier);
                 sb.AppendLine($"  {tierName}: {chance.ToStringPercent()}");
             }
-
             return sb.ToString().TrimEnd();
         }
 

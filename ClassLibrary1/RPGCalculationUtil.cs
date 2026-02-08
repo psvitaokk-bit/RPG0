@@ -105,5 +105,30 @@ namespace MyRPGMod
                 healAmountPerTick = 0.2f;
             }
         }
+
+        // =============================================================
+        //  4. 意識向上 (Boost) 関連
+        // =============================================================
+
+        public static void GetBoostStats(Pawn caster, int abilityLevel, out int durationTicks, out float offsetAmount)
+        {
+            // 持続時間: 基本30秒(1800) + レベルごとに10秒(600)
+            durationTicks = 1800 + (abilityLevel * 600);
+
+            if (caster != null)
+            {
+                // 魔力倍率を取得
+                float magicPower = GetMagicPower(caster);
+
+                // 上昇量: (基本10% + レベル毎5%) * 魔力
+                // 例: Lv1(15%) * 魔力1.2 = 18%上昇
+                float baseBoost = 0.10f + (abilityLevel * 0.05f);
+                offsetAmount = baseBoost * magicPower;
+            }
+            else
+            {
+                offsetAmount = 0.1f;
+            }
+        }
     }
 }

@@ -67,10 +67,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Abiliti\Defender\Patch_Pawn_HealthTracker_PreApplyDamage.cs" />
+    <Compile Include="Abiliti\Defender\RPGAbilityStatWorker_ParryChance.cs" />
     <Compile Include="Abiliti\Healer\Hast\Hediff_MagicBoost.cs" />
     <Compile Include="Abiliti\Healer\Hast\CompProperties_Boost.cs" />
     <Compile Include="Abiliti\Healer\Hast\RPGAbilityStatWorker_BoostInfo.cs" />
     <Compile Include="Abiliti\Healer\Regen\RPGAbilityStatWorker_RegenInfo.cs" />
+    <Compile Include="Abiliti\Healer\Tend\CompAbilityEffect_Tending.cs" />
+    <Compile Include="Abiliti\Healer\Tend\RPGAbilityStatWorker_TendQuality.cs" />
     <Compile Include="Abiliti\StateWorker.cs" />
     <Compile Include="Abiliti\CompProperties_MeleeDamage.cs" />
     <Compile Include="Abiliti\RPGClassDef.cs" />
@@ -80,18 +84,27 @@
     <Compile Include="Abiliti\Healer\Regen\CompProperties_Cure.cs" />
     <Compile Include="Abiliti\Healer\Regen\HediffCompProperties_Regenerate.cs" />
     <Compile Include="Abiliti\Healer\Regen\CompAbilityEffect_Regenerate.cs" />
-    <Compile Include="Class1.cs" />
+    <Compile Include="Calculation\RPGBuffCalculator.cs" />
+    <Compile Include="Calculation\RPGMagicCalculator.cs" />
+    <Compile Include="Calculation\RPGMedicalCalculator.cs" />
+    <Compile Include="Def\RPGDefOf.cs" />
     <Compile Include="Harmony\Patch_TendUtility_DoTend.cs" />
-    <Compile Include="RPGCalculationUtil.cs" />
-    <Compile Include="RPGAbilityStatWorker.cs" />
-    <Compile Include="RPGAbilityStatWorker_Standard.cs" />
-    <Compile Include="CompRPG.cs" />
-    <Compile Include="Startup_InjectRPG.cs" />
-    <Compile Include="ITab_Pawn_RPG.cs" />
-    <Compile Include="RPGAbilityDef.cs" />
-    <Compile Include="Gizmo_ManaBa.cs" />
+    <Compile Include="Calculation\RPGAbilityStatWorker.cs" />
+    <Compile Include="Calculation\RPGAbilityStatWorker_Standard.cs" />
+    <Compile Include="RPGcomps\RPG_AbilityHandler.cs" />
+    <Compile Include="RPGcomps\RPG_ManaHandler.cs" />
+    <Compile Include="RPGcomps\RPG_LevelHandler..cs" />
+    <Compile Include="RPGcomps\CompRPG.cs" />
+    <Compile Include="RPGcomps\Startup_InjectRPG.cs" />
+    <Compile Include="UI\ITab_Pawn_RPG.cs" />
+    <Compile Include="Def\RPGAbilityDef.cs" />
+    <Compile Include="UI\Gizmo_ManaBa.cs" />
     <Compile Include="Harmony\Patch_Pawn_Kill.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UI\RPGAbilityDetailDrawer.cs" />
+    <Compile Include="UI\RPGAbilityListDrawer.cs" />
+    <Compile Include="UI\RPGStatusDrawer.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

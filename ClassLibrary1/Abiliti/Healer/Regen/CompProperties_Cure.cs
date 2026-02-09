@@ -33,7 +33,7 @@ namespace MyRPGMod
             int abilityLevel = rpgComp.GetAbilityLevel(rpgDef);
 
             // ★修正：Utilからリストを取得
-            HashSet<string> curableNames = RPGCalculationUtil.GetCurableDefNames(abilityLevel);
+            HashSet<string> curableNames = RPGMedicalCalculator.GetCurableDefNames(abilityLevel);
 
             // ターゲットが持っている「今治せる病気」の中で一番ランクが高いものを探す
             int highestTier = 0;
@@ -47,10 +47,10 @@ namespace MyRPGMod
             }
 
             // ★修正：Utilでランク判定
-            highestTier = targetHediffs.Max(h => RPGCalculationUtil.GetDiseaseTier(h.def.defName));
+            highestTier = targetHediffs.Max(h => RPGMedicalCalculator.GetDiseaseTier(h.def.defName));
 
             // ★修正：Utilで成功率計算
-            float successChance = RPGCalculationUtil.GetCureSuccessChance(caster, highestTier);
+            float successChance = RPGMedicalCalculator.GetCureSuccessChance(caster, highestTier);
 
             // 判定
             if (Rand.Value > successChance)

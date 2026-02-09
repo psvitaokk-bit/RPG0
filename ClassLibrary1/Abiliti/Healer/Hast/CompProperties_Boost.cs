@@ -32,7 +32,7 @@ namespace MyRPGMod
             int abilityLevel = rpgComp.GetAbilityLevel(rpgDef);
 
             // 1. 計算機から数値を取得
-            RPGCalculationUtil.GetBoostStats(caster, abilityLevel, out int duration, out float boostAmount);
+            RPGBuffCalculator.GetBoostStats(caster, abilityLevel, out int duration, out float boostAmount);
 
             // 2. バフを適用
             HediffDef hediffDef = RPGDefOf.RPG_ConsciousnessBuff;

@@ -22,7 +22,7 @@ namespace MyRPGMod
             // これがないと abilityLevel が何なのか分からなくてエラーになるよ
             int abilityLevel = rpgComp.GetAbilityLevel(rpgDef);
 
-            RPGCalculationUtil.GetRegenStats(caster, abilityLevel, out int duration, out float finalHeal);
+            RPGMedicalCalculator.GetRegenStats(caster, abilityLevel, out int duration, out float finalHeal);
 
             // --- Hediffの適用 ---
             HediffDef hediffDef = RPGDefOf.RPG_RegenerateBuff;

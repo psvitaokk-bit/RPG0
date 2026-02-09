@@ -9,8 +9,8 @@ namespace MyRPGMod
         {
             if (caster == null) return 0f;
 
-            // ★修正：Utilを使う
-            RPGCalculationUtil.GetRegenStats(caster, level, out int durationTicks, out float healPerSec);
+            // 1. RPGCalculationUtil から RPGMedicalCalculator へ変更
+            RPGMedicalCalculator.GetRegenStats(caster, level, out int durationTicks, out float healPerSec);
 
             float durationSec = durationTicks / 60f;
             return healPerSec * durationSec; // 合計回復量
@@ -20,13 +20,13 @@ namespace MyRPGMod
         {
             if (caster == null) return "Total Heal: ???";
 
-            // ★修正：Utilを使う
-            RPGCalculationUtil.GetRegenStats(caster, level, out int durationTicks, out float healPerSec);
+            RPGMedicalCalculator.GetRegenStats(caster, level, out int durationTicks, out float healPerSec);
 
             float durationSec = durationTicks / 60f;
             float totalHeal = healPerSec * durationSec;
 
-            return $"Total Heal: {totalHeal:F1} ({healPerSec:F2}/sec for {durationSec:F0}s)";
+            // 注釈を追加
+            return $"<color=gray>※Untended wounds heal 30% slower</color>\nTotal Heal: {totalHeal:F1} ({healPerSec:F2}/sec)";
         }
     }
 }

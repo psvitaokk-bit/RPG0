@@ -19,8 +19,7 @@ namespace MyRPGMod
     {
         public override void Apply(LocalTargetInfo target, LocalTargetInfo dest)
         {
-            base.Apply(target, dest); // baseも呼んでおくと安心
-
+            base.Apply(target, dest);
             Pawn targetPawn = target.Pawn;
             Pawn caster = parent.pawn;
 
@@ -32,55 +31,60 @@ namespace MyRPGMod
                 if (rpgComp != null && rpgDef != null)
                 {
                     int currentLevel = rpgComp.GetAbilityLevel(rpgDef);
-                    float finalHeal = 10f; // statが見つからない時のデフォルト値
 
-                    // "Heal Amount" というラベルの定義を探す
-                    var stat = rpgDef.stats.FirstOrDefault(s => s.label == "Heal Amount");
-
-                    if (stat != null)
+                    // 1. 回復可能最大量の計算
+                    float finalHeal = 10f;
+                    var healStat = rpgDef.stats.FirstOrDefault(s => s.label == "Heal Amount");
+                    if (healStat != null)
                     {
-                        // ★ここが変わった！
-                        // Workerに「今のレベルと術者のステータスだと、数値いくつ？」って聞くだけ
-                        finalHeal = stat.Worker.Calculate(
-                            stat.baseValue,
-                            stat.valuePerLevel,
-                            currentLevel,
-                            caster,
-                            rpgDef
-                        );
+                        finalHeal = healStat.Worker.Calculate(healStat.baseValue, healStat.valuePerLevel, currentLevel, caster, rpgDef);
                     }
 
-                    // あとは結果を使うだけ
-                    HealInjuries(targetPawn, finalHeal);
-                    MoteMaker.ThrowText(targetPawn.DrawPos, targetPawn.Map, $"HEAL! (+{finalHeal:F1})", Color.green, 2f);
+                    // 2. 最大治療数の計算
+                    int maxInjuries = 999;
+                    var targetStat = rpgDef.stats.FirstOrDefault(s => s.label == "Max Injuries");
+                    if (targetStat != null)
+                    {
+                        maxInjuries = Mathf.RoundToInt(targetStat.Worker.Calculate(targetStat.baseValue, targetStat.valuePerLevel, currentLevel, caster, rpgDef));
+                    }
+
+                    // 3. 治療実行と「実際に回復した量」の取得
+                    float totalRecovered = HealInjuries(targetPawn, finalHeal, maxInjuries);
+
+                    // 4. 合計回復量を表示
+                    MoteMaker.ThrowText(targetPawn.DrawPos, targetPawn.Map, $"HEAL! (+{totalRecovered:F1})", Color.green, 2f);
                 }
             }
         }
 
-        // 傷を治すための補助メソッド
-        private void HealInjuries(Pawn pawn, float amount)
+        // 戻り値を float に変更し、実際に減らした Severity の合計を返す
+        private float HealInjuries(Pawn pawn, float amount, int maxInjuries)
         {
             float remainingHeal = amount;
+            float totalHealed = 0f; // 実際に回復した合計値
+            int treatedCount = 0;
 
-            // ポーンが持っている「怪我(Hediff_Injury)」をリストアップ
-            // 古傷(Scars)は除外し、現在進行形で痛んでいる怪我だけを対象にするのが一般的だよ
             var injuries = pawn.health.hediffSet.hediffs
                 .OfType<Hediff_Injury>()
                 .Where(i => i.CanHealNaturally() && i.Severity > 0)
+                .OrderByDescending(i => i.Severity)
                 .ToList();
 
             foreach (var injury in injuries)
             {
-                if (remainingHeal <= 0) break;
+                if (remainingHeal <= 0 || treatedCount >= maxInjuries) break;
 
-                // 回復させる量（怪我の重症度か、残り回復ポイントの小さい方）
+                // この傷に対して適用する回復量
                 float healPower = Mathf.Min(injury.Severity, remainingHeal);
 
-                // 重症度を下げる（0になると自動的に消滅するよ）
                 injury.Severity -= healPower;
                 remainingHeal -= healPower;
+                totalHealed += healPower; // 合計に加算
+
+                treatedCount++;
             }
 
+            return totalHealed; // 合計値を返す
         }
     }
 }

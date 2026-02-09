@@ -54,7 +54,7 @@ namespace MyRPGMod
             for (int i = 1; i <= level; i++)
             {
                 // ★修正：Utilを使う
-                HashSet<string> names = RPGCalculationUtil.GetCurableDefNames(i);
+                HashSet<string> names = RPGMedicalCalculator.GetCurableDefNames(i);
 
                 // (注意：GetCurableDefNamesは「そのレベル以下全部」を返す仕様なので、
                 // ランクごとの表示にするなら Util に「特定のランクだけ返すメソッド」を作るか、
@@ -67,7 +67,7 @@ namespace MyRPGMod
                 foreach (string name in names)
                 {
                     // そのランクのものだけ表示するフィルタリング（簡易実装）
-                    if (RPGCalculationUtil.GetDiseaseTier(name) != i) continue;
+                    if (RPGMedicalCalculator.GetDiseaseTier(name) != i) continue;
 
                     HediffDef def = DefDatabase<HediffDef>.GetNamedSilentFail(name);
                     string label = (def != null) ? (string)def.LabelCap : name;
@@ -119,7 +119,7 @@ namespace MyRPGMod
             for (int tier = 1; tier <= 4; tier++)
             {
                 // ★修正：Utilを使って一発計算
-                float chance = RPGCalculationUtil.GetCureSuccessChance(caster, tier);
+                float chance = RPGMedicalCalculator.GetCureSuccessChance(caster, tier);
 
                 string tierName = GetTierName(tier);
                 sb.AppendLine($"  {tierName}: {chance.ToStringPercent()}");

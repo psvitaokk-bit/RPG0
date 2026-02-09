@@ -39,7 +39,7 @@ namespace MyRPGMod
             int level = rpgComp.GetAbilityLevel(rpgDef);
 
             // --- 2. 数値計算（Worker の Null チェックを強化） ---
-            float damageAmount = 1f;
+            float damageAmount = 10f;
             float stunSeconds = 1.5f;
 
             if (rpgDef.stats != null)

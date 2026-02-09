@@ -103,10 +103,16 @@ namespace MyRPGMod
         }
 
         // セーブデータの読み書き（ターゲット情報を保存するため必須）
+        public int abilityLevel = 1; // ★追加：発動時のレベルを記憶
+
+        // レベル3以上なら被ダメージを1.2倍にする等の判定用
+        public float DamageMultiplier => (abilityLevel >= 3) ? 1.2f : 1.0f;
+
         public override void ExposeData()
         {
             base.ExposeData();
             Scribe_References.Look(ref tauntTarget, "tauntTarget");
+            Scribe_Values.Look(ref abilityLevel, "abilityLevel", 1); // セーブ・ロード対応
         }
     }
 }

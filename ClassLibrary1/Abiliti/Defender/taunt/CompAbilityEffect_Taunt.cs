@@ -57,6 +57,8 @@ namespace MyRPGMod
                 // ★ここでターゲット（術者）を覚えさせる★
                 tauntHediff.tauntTarget = caster;
 
+                tauntHediff.Severity = (float)level;
+
                 // 消滅コンポーネントの設定
                 var disappearComp = tauntHediff.TryGetComp<HediffComp_Disappears>();
                 if (disappearComp != null)

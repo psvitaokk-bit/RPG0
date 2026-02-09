@@ -8,7 +8,7 @@ namespace MyRPGMod
         public float currentMP = 0;
 
         // 最大MPの計算式（レベルに依存）
-        public float GetMaxMP(int level) => level * 20f;
+        public float GetMaxMP(int level) => 100f + level * 20f;
 
         public bool TryConsumeMP(float cost)
         {

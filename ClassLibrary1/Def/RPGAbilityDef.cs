@@ -2,6 +2,7 @@
 using Verse;
 using System.Collections.Generic;
 using Verse.Sound;
+using UnityEngine;
 
 namespace MyRPGMod
 {
@@ -62,26 +63,45 @@ namespace MyRPGMod
     {
         public RPGAbility(Pawn pawn) : base(pawn) { }
         public RPGAbility(Pawn pawn, AbilityDef def) : base(pawn, def) { }
-       
+
 
 
         public override bool Activate(LocalTargetInfo target, LocalTargetInfo dest)
         {
             bool result = base.Activate(target, dest);
+
+            // 発動に成功した場合
             if (result)
             {
                 RPGAbilityDef rpgDef = def as RPGAbilityDef;
-
-
-                // ★追加：発動成功（インパクト）の音を鳴らす★
-                if (rpgDef?.soundImpact != null)
-                {
-                    // ターゲットの位置（または弾着地点）で鳴らす
-                    rpgDef.soundImpact.PlayOneShot(new TargetInfo(target.Cell, pawn.Map));
-                }
-
                 CompRPG comp = pawn.GetComp<CompRPG>();
-                if (comp != null && rpgDef != null) comp.TryConsumeMP(rpgDef.manaCost);
+
+                if (comp != null && rpgDef != null)
+                {
+                    // 1. MP消費 (既存)
+                    comp.TryConsumeMP(rpgDef.manaCost);
+
+                    // 2. 音再生 (既存)
+                    if (rpgDef.soundImpact != null)
+                    {
+                        rpgDef.soundImpact.PlayOneShot(new TargetInfo(target.Cell, pawn.Map));
+                    }
+
+                    // --- ★追加: アビリティ使用経験値 ---
+                    // マナコストが高い技ほど、経験値が多く入るようにする
+                    // 例: マナ10消費 → 20XP
+                    float abilityXp = rpgDef.manaCost * 2.0f;
+
+                    // 最低保証
+                    if (abilityXp < 10f) abilityXp = 10f;
+
+                    comp.GainXp(abilityXp);
+
+                    if (pawn.Map != null)
+                    {
+                        MoteMaker.ThrowText(pawn.DrawPos, pawn.Map, $"+{abilityXp:F0} XP", Color.cyan);
+                    }
+                }
             }
             return result;
         }

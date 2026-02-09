@@ -67,6 +67,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Abiliti\Asassin\Back\CompAbilityEffect_Backstab.cs" />
+    <Compile Include="Abiliti\Asassin\DaggerThrow\CompAbilityEffect_DaggerThrow.cs" />
+    <Compile Include="Abiliti\Asassin\Hide\HediffComp_HideRemove.cs" />
+    <Compile Include="Abiliti\Asassin\Hide\RPGAbilityStatWorker_HideSpeed.cs" />
+    <Compile Include="Abiliti\Asassin\Hide\CompAbilityEffect_Hide.cs" />
+    <Compile Include="Abiliti\Asassin\Back\RPGAbilityStatWorker_BackstabMult.cs" />
+    <Compile Include="Abiliti\Asassin\DaggerThrow\RPGAbilityStatWorker_ProjectileCount.cs" />
+    <Compile Include="Abiliti\common\Class1.cs" />
+    <Compile Include="Abiliti\common\Class2.cs" />
+    <Compile Include="Abiliti\common\RPGAbility_Magic..cs" />
     <Compile Include="Abiliti\Defender\bash\CompAbilityEffect_ShieldBash.cs" />
     <Compile Include="Abiliti\Defender\bash\RPGAbilityStatWorker_StunDuration.cs" />
     <Compile Include="Abiliti\Defender\Hediff_GuardianOath\Hediff_GuardianOath.cs" />
@@ -97,9 +107,11 @@
     <Compile Include="Calculation\RPGMagicCalculator.cs" />
     <Compile Include="Calculation\RPGMedicalCalculator.cs" />
     <Compile Include="Def\RPGDefOf.cs" />
+    <Compile Include="Harmony\Patch_Pawn_PostApplyDamage.cs" />
     <Compile Include="Harmony\Patch_TendUtility_DoTend.cs" />
     <Compile Include="Calculation\RPGAbilityStatWorker.cs" />
     <Compile Include="Calculation\RPGAbilityStatWorker_Standard.cs" />
+    <Compile Include="RPGcomps\PredatorManager.cs" />
     <Compile Include="RPGcomps\RPG_AbilityHandler.cs" />
     <Compile Include="RPGcomps\RPG_ManaHandler.cs" />
     <Compile Include="RPGcomps\RPG_LevelHandler..cs" />

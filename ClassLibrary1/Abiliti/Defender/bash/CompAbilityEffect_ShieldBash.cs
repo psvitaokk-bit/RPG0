@@ -81,7 +81,7 @@ namespace MyRPGMod
             }
 
             // --- 4. ダメージとスタンの適用（ターゲット生存チェック） ---
-
+            caster.stances.stunner.StunFor(60, null, showMote: false, disableRotation: false);
             // ダメージ適用
             DamageInfo dinfo = new DamageInfo(DamageDefOf.Blunt, damageAmount, 0, -1, caster);
             targetPawn.TakeDamage(dinfo);

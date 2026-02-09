@@ -37,7 +37,7 @@ namespace MyRPGMod
 
                         // 4. 経験値を計算（例：戦闘力 × 10倍）
                         // お兄ちゃんの好みに合わせて「× 5」とかに調整してみてね！
-                        float gainXp = victimPower * 10f;
+                        float gainXp = victimPower ;
 
                         // 経験値を加算
                         rpgComp.GainXp(gainXp);

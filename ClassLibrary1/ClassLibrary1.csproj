@@ -67,8 +67,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Abiliti\Defender\Patch_Pawn_HealthTracker_PreApplyDamage.cs" />
-    <Compile Include="Abiliti\Defender\RPGAbilityStatWorker_ParryChance.cs" />
+    <Compile Include="Abiliti\Defender\bash\CompAbilityEffect_ShieldBash.cs" />
+    <Compile Include="Abiliti\Defender\bash\RPGAbilityStatWorker_StunDuration.cs" />
+    <Compile Include="Abiliti\Defender\taunt\CompAbilityEffect_Taunt.cs" />
+    <Compile Include="Abiliti\Defender\taunt\HediffComp_TauntVisual.cs" />
+    <Compile Include="Abiliti\Defender\taunt\Hediff_Taunted.cs" />
+    <Compile Include="Abiliti\Defender\paryy\Patch_Pawn_HealthTracker_PreApplyDamage.cs" />
+    <Compile Include="Abiliti\Defender\paryy\RPGAbilityStatWorker_ParryChance.cs" />
     <Compile Include="Abiliti\Healer\Hast\Hediff_MagicBoost.cs" />
     <Compile Include="Abiliti\Healer\Hast\CompProperties_Boost.cs" />
     <Compile Include="Abiliti\Healer\Hast\RPGAbilityStatWorker_BoostInfo.cs" />

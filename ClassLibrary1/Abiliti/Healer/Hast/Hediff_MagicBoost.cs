@@ -54,8 +54,11 @@ namespace MyRPGMod
         {
             get
             {
-                // 例: "+50%, Move +20%"
-                return $"+{offset.ToStringPercent()}, Move +{(offset * 0.4f).ToStringPercent()}";
+                // 残り時間を計算 (1秒 = 60Tick)
+                var disappear = this.TryGetComp<HediffComp_Disappears>();
+                string timeStr = (disappear != null) ? $", {(disappear.ticksToDisappear / 60f):F0}s" : "";
+
+                return $"+{offset.ToStringPercent()}, Move +{(offset * 0.4f).ToStringPercent()}{timeStr}";
             }
         }
     }

@@ -3,6 +3,7 @@ using Verse;
 using System.Collections.Generic;
 using Verse.Sound;
 using UnityEngine;
+using System.Linq;
 
 namespace MyRPGMod
 {
@@ -19,6 +20,7 @@ namespace MyRPGMod
         public float manaCost = 10f;
         public int maxLevel = 1;
         public int upgradeCost = 1;
+        public List<int> upgradeCosts = new List<int>();
         public RPGCategory rpgCategory = RPGCategory.Offense;
         public List<AbilityStatEntry> stats = new List<AbilityStatEntry>();
         public float magicPowerFactor = 0f; // デフォルトは0（影響なし）にしておくと安全だよ
@@ -26,8 +28,44 @@ namespace MyRPGMod
         public RPGClassDef requiredClass;
         // ★追加：詠唱開始音と発動音★
         public SoundDef soundImpact; // 命中・効果発生時の音
-    }
+        public int GetUpgradeCost(int currentLevel)
+        {
+            // リストが設定されていない場合は、従来の upgradeCost フィールドの値を返す
+            if (upgradeCosts == null || upgradeCosts.Count == 0) return upgradeCost;
 
+            // 現在のレベルがリストの範囲内ならその値を、範囲外（最大レベル以上など）なら最後の値を返す
+            if (currentLevel < upgradeCosts.Count) return upgradeCosts[currentLevel];
+            return upgradeCosts.Last();
+        }
+
+
+    }
+    public class Command_RPGAbility : Command_Ability
+    {
+        public Command_RPGAbility(Ability ability, Pawn pawn) : base(ability, pawn)
+        {
+        }
+
+        public override string Desc
+        {
+            get
+            {
+                string text = base.Desc;
+
+                if (this.Ability is RPGAbility rpgAbility && rpgAbility.def is RPGAbilityDef rpgDef)
+                {
+                    text += $"\n\n<color=cyan>MP Cost: {rpgDef.manaCost}</color>";
+
+                    CompRPG comp = this.Ability.pawn.GetComp<CompRPG>();
+                    if (comp != null && comp.currentMP < rpgDef.manaCost)
+                    {
+                        text += $"\n<color=red>Not enough MP (Current: {comp.currentMP:F0})</color>";
+                    }
+                }
+                return text;
+            }
+        }
+    }
     // RPGAbilityDef.cs の AbilityStatEntry を修正
     public class AbilityStatEntry
     {
@@ -64,7 +102,32 @@ namespace MyRPGMod
         public RPGAbility(Pawn pawn) : base(pawn) { }
         public RPGAbility(Pawn pawn, AbilityDef def) : base(pawn, def) { }
 
+        public override IEnumerable<Command> GetGizmos()
+        {
+            // バニラの処理で生成されたギズモをチェック
+            foreach (Command cmd in base.GetGizmos())
+            {
+                if (cmd is Command_Ability)
+                {
+                    // ★修正2: コンストラクタに this.pawn を渡す
+                    Command_RPGAbility newCmd = new Command_RPGAbility(this, this.pawn);
 
+                    // ★修正3: disabled などのプロパティコピーを削除
+                    // Command_Abilityのコンストラクタが自動的に Ability.GizmoDisabled() をチェックして
+                    // アイコン、無効状態、ラベルなどを正しくセットしてくれるため、手動コピーは不要です。
+                    // これにより CS0122 エラーも解消されます。
+
+                    // 表示順序だけは維持しておく
+                    newCmd.Order = cmd.Order;
+
+                    yield return newCmd;
+                }
+                else
+                {
+                    yield return cmd;
+                }
+            }
+        }
 
         public override bool Activate(LocalTargetInfo target, LocalTargetInfo dest)
         {
@@ -120,5 +183,7 @@ namespace MyRPGMod
             }
             return false;
         }
+
+
     }
 }

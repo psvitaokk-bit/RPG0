@@ -18,9 +18,12 @@ namespace MyRPGMod
         {
             int curLv = GetAbilityLevel(def);
 
-            if (curLv < def.maxLevel && levelHandler.skillPoints >= def.upgradeCost)
+            // ★変更：現在のレベルに基づいたコストを取得
+            int requiredCost = def.GetUpgradeCost(curLv);
+
+            if (curLv < def.maxLevel && levelHandler.skillPoints >= requiredCost)
             {
-                levelHandler.skillPoints -= def.upgradeCost;
+                levelHandler.skillPoints -= requiredCost;
 
                 if (curLv == 0)
                 {
@@ -35,6 +38,11 @@ namespace MyRPGMod
                     abilityLevels[def.defName]++;
                 }
                 Messages.Message($"{def.label} Upgraded!", MessageTypeDefOf.PositiveEvent);
+            }
+            else if (levelHandler.skillPoints < requiredCost)
+            {
+                // ポイント不足時の通知（任意）
+                Messages.Message("Not enough skill points.", MessageTypeDefOf.RejectInput, false);
             }
         }
 

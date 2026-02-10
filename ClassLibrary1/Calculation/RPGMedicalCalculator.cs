@@ -44,7 +44,7 @@ namespace MyRPGMod
 
         public static void GetRegenStats(Pawn caster, int abilityLevel, out int durationTicks, out float healAmountPerTick)
         {
-            durationTicks = 900 + (abilityLevel * 300);
+            durationTicks = 700 + (abilityLevel * 200);
             if (caster != null)
             {
                 float medicalLevel = caster.skills?.GetSkill(SkillDefOf.Medicine)?.Level ?? 0f;

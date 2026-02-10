@@ -105,9 +105,12 @@ namespace MyRPGMod
             Rect btnRect = footer.GetRect(30f);
             int curLv = comp.GetAbilityLevel(def);
 
+            // ★変更：現在のレベルに基づいたコストを取得して表示
+            int currentCost = def.GetUpgradeCost(curLv);
+
             if (curLv < def.maxLevel)
             {
-                string btnLabel = curLv == 0 ? $"Learn ({def.upgradeCost}pt)" : $"Upgrade ({def.upgradeCost}pt)";
+                string btnLabel = curLv == 0 ? $"Learn ({currentCost}pt)" : $"Upgrade ({currentCost}pt)";
                 if (Widgets.ButtonText(btnRect, btnLabel))
                 {
                     comp.UpgradeAbility(def);
